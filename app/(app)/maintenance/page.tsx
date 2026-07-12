@@ -205,6 +205,32 @@ export default function MaintenancePage() {
     }
   };
 
+  const handleDeleteLog = async (logId: string) => {
+    if (!confirm("Are you sure you want to delete/void this maintenance log record? This will also revert the vehicle's status to Available if the repair was still open.")) {
+      return;
+    }
+    try {
+      const res = await fetch(`/api/maintenance/${logId}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        // Refresh page data
+        const logsRes = await fetch("/api/maintenance");
+        if (logsRes.ok) {
+          const logsData = await logsRes.json();
+          setLogs(logsData.logs);
+          setStats(logsData.stats);
+        }
+      } else {
+        const errData = await res.json();
+        alert(errData.error || "Failed to delete log.");
+      }
+    } catch (err) {
+      alert("Error deleting log.");
+    }
+  };
+
   const filteredLogs = logs.filter((log) => {
     if (statusFilter === "OPEN") return log.closedAt === null;
     if (statusFilter === "CLOSED") return log.closedAt !== null;
@@ -449,16 +475,28 @@ export default function MaintenancePage() {
                       {record.closedAt ? "Closed" : "Open"}
                     </Badge>
                     
-                    {!record.closedAt && !isDbFallback && (
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => handleCloseLog(record.id)}
-                        className="text-xs"
-                      >
-                        Close Repair
-                      </Button>
-                    )}
+                    <div style={{ display: "flex", gap: "0.375rem", flexWrap: "wrap", justifyContent: "flex-end" }}>
+                      {!record.closedAt && !isDbFallback && (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => handleCloseLog(record.id)}
+                          className="text-xs"
+                        >
+                          Close Repair
+                        </Button>
+                      )}
+                      {!isDbFallback && (
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleDeleteLog(record.id)}
+                          className="text-xs"
+                        >
+                          Delete
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
