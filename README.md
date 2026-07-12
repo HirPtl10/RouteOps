@@ -10,12 +10,6 @@ Built during an **8-hour hackathon**, RouteOps replaces fragmented spreadsheets 
 
 ## 📸 Screenshots
 
-> Add your main dashboard screenshot here.
-
-<br />
-
-> Add screenshots of your core operational workflows here.
-
 <table>
   <tr>
     <td width="50%">
@@ -546,10 +540,10 @@ Built with collaboration, rapid iteration, and a shared vision during an **8-hou
 
 | Contributor | Responsibility |
 | --- | --- |
-| [Member 1](https://github.com/USERNAME) | Fleet Management & Integration |
-| [Member 2](https://github.com/USERNAME) | Database, Drivers & Finance |
-| [Member 3](https://github.com/USERNAME) | Authentication, RBAC & Trip Management |
-| [Member 4](https://github.com/USERNAME) | Design System, Maintenance & Analytics |
+| [Member 1](https://github.com/lassi-ui) | Fleet Management & Integration |
+| [Member 2](https://github.com/HirPtl10) | Database, Drivers & Finance |
+| [Member 3](https://github.com/MANAV-PATEL13) | Authentication, RBAC & Trip Management |
+| [Member 4](https://github.com/Ayush-9010) | Design System, Maintenance & Analytics |
 
 ---
 
