@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import AppShell from "./components/AppShell";
 
 export const metadata: Metadata = {
   title: "TransitOps",
@@ -13,7 +14,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="bg-slate-50 antialiased">{children}</body>
+      <body className="bg-slate-50 antialiased">
+        <AppShell>{children}</AppShell>
+      </body>
     </html>
   );
 }
