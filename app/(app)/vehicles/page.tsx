@@ -13,9 +13,9 @@ import {
   RefreshCw,
   FolderOpen
 } from "lucide-react";
-import { Badge } from "../../../components/ui/badge";
-import { Button } from "../../../components/ui/button";
-import { Select } from "../../../components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
 
 // Mock data matching schema fields if database URL is missing/Prisma fails
 const mockVehicles = [
