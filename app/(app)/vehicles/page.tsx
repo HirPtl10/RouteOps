@@ -8,13 +8,14 @@ import {
   Search, 
   Filter, 
   AlertCircle,
-  FileText,
   SlidersHorizontal,
   ChevronRight,
-  Info
+  RefreshCw,
+  FolderOpen
 } from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
+import { Select } from "../../../components/ui/select";
 
 // Mock data matching schema fields if database URL is missing/Prisma fails
 const mockVehicles = [
@@ -29,6 +30,11 @@ export default function VehiclesPage() {
   const [vehicles, setVehicles] = useState(mockVehicles);
   const [loading, setLoading] = useState(false);
   const [isDbFallback, setIsDbFallback] = useState(true);
+
+  // Search & Filter States
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [sortBy, setSortBy] = useState("code");
 
   // In a real environment, we'd fetch from a Server Action or Route Handler.
   // We'll write the Prisma fetch simulation here.
@@ -69,6 +75,34 @@ export default function VehiclesPage() {
     }
   };
 
+  // Filter and sort computation
+  const filteredVehicles = vehicles
+    .filter((v) => {
+      const matchesSearch = 
+        v.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        v.plateNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        v.make.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        v.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (v.vin && v.vin.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+      const matchesStatus = statusFilter === "ALL" || v.status === statusFilter;
+      
+      return matchesSearch && matchesStatus;
+    })
+    .sort((a, b) => {
+      if (sortBy === "code") return a.code.localeCompare(b.code);
+      if (sortBy === "make") return a.make.localeCompare(b.make);
+      if (sortBy === "year") return b.year - a.year; // newest model first
+      if (sortBy === "capacity") return b.capacityKg - a.capacityKg; // highest capacity first
+      return 0;
+    });
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("ALL");
+    setSortBy("code");
+  };
+
   return (
     <div className="space-y-6">
       {/* ── HEADER SECTION ── */}
@@ -98,26 +132,55 @@ export default function VehiclesPage() {
         </div>
       )}
 
-      {/* ── FILTER / CONTROLS PLACEHOLDER (Phase 5 Ownership) ── */}
-      <div className="bg-white border border-slate-100 p-4 rounded-2xl shadow-sm flex flex-col sm:flex-row gap-3 items-center justify-between">
-        <div className="relative w-full sm:max-w-xs">
-          <Search className="absolute left-3 top-2.5 h-4.5 w-4.5 text-slate-400" />
+      {/* ── FILTER / CONTROLS PANEL ── */}
+      <div className="bg-white border border-slate-100 p-4 rounded-3xl shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+        
+        {/* Search Input */}
+        <div className="relative w-full md:max-w-xs">
+          <Search className="absolute left-3.5 top-3 h-4.5 w-4.5 text-slate-400" />
           <input 
             type="text" 
-            placeholder="Search code, plate number..." 
-            disabled
-            className="w-full pl-10 pr-4 py-2 text-sm border border-slate-200 rounded-xl bg-slate-50 cursor-not-allowed text-slate-400 placeholder:text-slate-400 focus:outline-none"
+            placeholder="Search code, plate number, brand..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-11 pr-4 py-2.5 text-sm border border-slate-200 rounded-xl bg-slate-50/50 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200 focus:border-slate-300 transition-all"
           />
         </div>
-        <div className="flex gap-2 w-full sm:w-auto">
-          <Button variant="outline" disabled className="gap-2 w-full sm:w-auto rounded-xl border-slate-200 text-slate-400 bg-slate-50 cursor-not-allowed">
-            <Filter className="h-4 w-4" />
-            Filter Status
-          </Button>
-          <Button variant="outline" disabled className="gap-2 w-full sm:w-auto rounded-xl border-slate-200 text-slate-400 bg-slate-50 cursor-not-allowed">
-            <SlidersHorizontal className="h-4 w-4" />
-            Sort
-          </Button>
+
+        {/* Dropdown Filters */}
+        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+          
+          {/* Status Filter */}
+          <div className="w-full sm:w-44 flex items-center gap-2">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wide hidden sm:inline">Status:</span>
+            <Select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="rounded-xl font-medium"
+            >
+              <option value="ALL">All Statuses</option>
+              <option value="AVAILABLE">Available</option>
+              <option value="ON_TRIP">On Trip</option>
+              <option value="IN_SHOP">In Shop</option>
+              <option value="RETIRED">Retired</option>
+            </Select>
+          </div>
+
+          {/* Sort Order */}
+          <div className="w-full sm:w-44 flex items-center gap-2">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wide hidden sm:inline">Sort:</span>
+            <Select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="rounded-xl font-medium"
+            >
+              <option value="code">Code Identifier</option>
+              <option value="make">Brand Name</option>
+              <option value="year">Model Year</option>
+              <option value="capacity">Max Capacity</option>
+            </Select>
+          </div>
+
         </div>
       </div>
 
@@ -125,6 +188,26 @@ export default function VehiclesPage() {
       {loading ? (
         <div className="flex justify-center items-center py-20 bg-white border border-slate-100 rounded-3xl shadow-sm">
           <p className="text-slate-400 text-sm font-medium">Loading fleet records...</p>
+        </div>
+      ) : filteredVehicles.length === 0 ? (
+        /* Empty Search Results State */
+        <div className="flex flex-col items-center justify-center py-16 px-6 bg-white border border-slate-100 rounded-3xl shadow-sm text-center space-y-4">
+          <div className="p-4 rounded-full bg-slate-50 text-slate-400 border border-slate-100">
+            <FolderOpen className="h-10 w-10" />
+          </div>
+          <div>
+            <h3 className="font-extrabold text-slate-700 text-base">No Fleet Results Found</h3>
+            <p className="text-xs text-slate-450 mt-1 max-w-sm mx-auto leading-relaxed">
+              We couldn't find any vehicles matching "{searchTerm}" {statusFilter !== "ALL" && `with status ${statusFilter}`}. Check spelling or reset selectors.
+            </p>
+          </div>
+          <Button 
+            onClick={clearFilters}
+            className="rounded-xl border-slate-200 hover:bg-slate-50 hover:text-slate-900 cursor-pointer h-9 px-3 text-xs bg-slate-900 text-white font-semibold gap-1.5"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            Clear All Filters
+          </Button>
         </div>
       ) : (
         <div className="bg-white border border-slate-100 rounded-3xl shadow-sm overflow-hidden">
@@ -143,7 +226,7 @@ export default function VehiclesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {vehicles.map((v) => (
+                {filteredVehicles.map((v) => (
                   <tr key={v.id} className="hover:bg-slate-50/30 transition-colors">
                     <td className="px-6 py-4 text-sm font-bold text-slate-800">{v.code}</td>
                     <td className="px-6 py-4">
@@ -177,7 +260,7 @@ export default function VehiclesPage() {
 
           {/* Mobile Grid/Card View */}
           <div className="md:hidden p-4 space-y-3">
-            {vehicles.map((v) => (
+            {filteredVehicles.map((v) => (
               <div key={v.id} className="bg-slate-50/50 border border-slate-100 p-4 rounded-2xl space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-bold text-slate-800">{v.code}</span>
