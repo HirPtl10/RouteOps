@@ -176,33 +176,33 @@ export default function AlertsPage() {
   };
 
   const getAlertIcon = (type: AlertType) => {
-    const cls = "h-5 w-5";
+    const cls = "h-4.5 w-4.5 text-white";
     switch (type) {
       case "MAINTENANCE":
-        return <Wrench className={`${cls} text-amber-600`} />;
+        return <Wrench className={cls} />;
       case "BREAKDOWN":
-        return <ShieldAlert className={`${cls} text-rose-600`} />;
+        return <ShieldAlert className={cls} />;
       case "DOCUMENT":
-        return <FileText className={`${cls} text-blue-600`} />;
+        return <FileText className={cls} />;
       case "DRIVER":
-        return <UserX className={`${cls} text-purple-600`} />;
+        return <UserX className={cls} />;
       default:
-        return <HelpCircle className={`${cls} text-slate-600`} />;
+        return <HelpCircle className={cls} />;
     }
   };
 
   const getAlertBg = (type: AlertType) => {
     switch (type) {
       case "MAINTENANCE":
-        return "bg-amber-50 border border-amber-100";
+        return "bg-gradient-to-br from-amber-400 to-amber-600 shadow-sm shadow-amber-500/10";
       case "BREAKDOWN":
-        return "bg-rose-50 border border-rose-100";
+        return "bg-gradient-to-br from-rose-500 to-rose-650 shadow-sm shadow-rose-500/10";
       case "DOCUMENT":
-        return "bg-blue-50 border border-blue-100";
+        return "bg-gradient-to-br from-blue-400 to-blue-600 shadow-sm shadow-blue-500/10";
       case "DRIVER":
-        return "bg-purple-50 border border-purple-100";
+        return "bg-gradient-to-br from-purple-400 to-purple-650 shadow-sm shadow-purple-500/10";
       default:
-        return "bg-slate-50 border border-slate-100";
+        return "bg-gradient-to-br from-slate-400 to-slate-600 shadow-sm shadow-slate-500/10";
     }
   };
 

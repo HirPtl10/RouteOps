@@ -3,14 +3,16 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { SessionActions } from "@/components/session-actions";
 
+import { Home, LayoutDashboard, Users, Activity, Truck, Wrench, Bell } from "lucide-react";
+
 const navItems = [
-  { label: "Home", href: "/" },
-  { label: "Dashboard", href: "/dashboard" },
-  { label: "Drivers", href: "/drivers" },
-  { label: "Trips", href: "/trips" },
-  { label: "Vehicles", href: "/vehicles" },
-  { label: "Maintenance", href: "/maintenance" },
-  { label: "Alerts", href: "/alerts" },
+  { label: "Home", href: "/", icon: Home },
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Drivers", href: "/drivers", icon: Users },
+  { label: "Trips", href: "/trips", icon: Activity },
+  { label: "Vehicles", href: "/vehicles", icon: Truck },
+  { label: "Maintenance", href: "/maintenance", icon: Wrench },
+  { label: "Alerts", href: "/alerts", icon: Bell },
 ];
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -105,23 +107,29 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             Preview areas
           </p>
           <nav style={{ display: "grid", gap: "0.5rem" }}>
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  minHeight: "2.75rem",
-                  padding: "0 0.9rem",
-                  borderRadius: "0.875rem",
-                  color: "#334155",
-                  textDecoration: "none",
-                }}
-              >
-                {item.label}
-              </Link>
-            ))}
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.75rem",
+                    minHeight: "2.75rem",
+                    padding: "0 0.9rem",
+                    borderRadius: "0.875rem",
+                    color: "#334155",
+                    textDecoration: "none",
+                  }}
+                  className="hover:bg-slate-50 transition-colors hover:text-slate-900 group"
+                >
+                  <Icon className="h-4.5 w-4.5 text-slate-400 group-hover:text-slate-700 transition-colors" />
+                  <span className="font-medium text-sm">{item.label}</span>
+                </Link>
+              );
+            })}
           </nav>
         </aside>
 
