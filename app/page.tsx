@@ -4,8 +4,6 @@ import { ArrowRight, BadgeCheck, LayoutDashboard, ShieldCheck, Sparkles } from "
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-const highlights = ["Static public homepage", "Shared visual language", "Responsive layout", "Hackathon-ready foundation"];
-
 const features = [
   { icon: LayoutDashboard, title: "Clean foundation", description: "A calm landing page that shows the app is wired up correctly." },
   { icon: ShieldCheck, title: "Auth paused safely", description: "The app stays open while the database flow is built out." },
@@ -75,14 +73,6 @@ export default function Home() {
             {actionLink("/trips", "secondary", "Browse trips")}
             {actionLink("/vehicles", "secondary", "Browse vehicles")}
             {actionLink("/maintenance", "secondary", "Open maintenance")}
-          </div>
-
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-            {highlights.map((item) => (
-              <Badge key={item} variant="secondary">
-                {item}
-              </Badge>
-            ))}
           </div>
         </div>
 
