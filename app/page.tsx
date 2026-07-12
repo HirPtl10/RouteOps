@@ -53,11 +53,18 @@ export default function Home() {
 
       <div className="mx-auto max-w-6xl px-6 mt-12 grid gap-10">
         {/* Intro */}
-        <section className="space-y-4">
-          <h2 className="text-3xl font-semibold tracking-tight text-slate-950">Shared Design System</h2>
-          <p className="max-w-3xl text-slate-600 leading-relaxed">
-            Welcome to the initial UI foundation of TransitOps. This gallery showcases our primary, lightweight UI components built using Next.js, React, Tailwind CSS v4, and TypeScript. Developers should reuse these patterns to maintain UI consistency.
-          </p>
+        <section className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          <div className="space-y-2">
+            <h2 className="text-3xl font-semibold tracking-tight text-slate-950">Shared Design System</h2>
+            <p className="max-w-2xl text-slate-600 leading-relaxed">
+              Welcome to the initial UI foundation of TransitOps. This gallery showcases our primary, lightweight UI components built using Next.js, React, Tailwind CSS v4, and TypeScript. Developers should reuse these patterns to maintain UI consistency.
+            </p>
+          </div>
+          <div className="flex-shrink-0">
+            <Button variant="primary" size="lg" className="w-full sm:w-auto" onClick={() => window.location.href = "/maintenance"}>
+              Go to Maintenance Hub →
+            </Button>
+          </div>
         </section>
 
         {/* Buttons section */}
