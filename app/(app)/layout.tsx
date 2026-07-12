@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { SessionActions } from "@/components/session-actions";
 
 const navItems = [
   { label: "Home", href: "/" },
@@ -11,7 +12,6 @@ const navItems = [
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
-  const userLabel = session?.user?.name ?? session?.user?.email ?? "Guest";
   const userMeta = session?.user?.role ?? "Signed out";
 
   return (
@@ -59,10 +59,21 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             </div>
           </Link>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap", justifyContent: "flex-end" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap", justifyContent: "flex-end" }}>
             <Badge variant="outline">Dashboard preview</Badge>
-            <Badge variant={session ? "secondary" : "outline"}>{userLabel}</Badge>
-            <span style={{ fontSize: "0.8rem", color: "#64748b" }}>{userMeta}</span>
+            <SessionActions
+              user={
+                session?.user
+                  ? {
+                      name: session.user.name,
+                      email: session.user.email,
+                      role: session.user.role,
+                      organizationId: session.user.organizationId,
+                    }
+                  : null
+              }
+            />
+            {session ? <span style={{ fontSize: "0.8rem", color: "#64748b" }}>{userMeta}</span> : null}
           </div>
         </div>
       </header>
