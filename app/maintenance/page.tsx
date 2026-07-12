@@ -35,13 +35,13 @@ export default async function MaintenancePage({
   const filterStatus = params.status || "";
 
   // Trigger db verification and seeding if necessary
-  let isDbReady = await ensureSeedData();
+  let isDbReady = (await ensureSeedData()) && !!prisma;
 
   let logs: any[] = [];
   let vehiclesList: any[] = [];
   let organizationName = "TransitOps Logistics (Mock)";
 
-  if (isDbReady) {
+  if (isDbReady && prisma) {
     try {
       // Get session
       const session = await auth();
@@ -121,7 +121,7 @@ export default async function MaintenancePage({
   }
 
   // Calculate statistics (global KPIs for this organization, unfiltered by filters)
-  const allOrgLogs = isDbReady && logs.length > 0
+  const allOrgLogs = isDbReady && prisma && logs.length > 0
     ? await prisma.maintenanceLog.findMany({
         where: {
           organizationId: logs[0].organizationId,
@@ -130,8 +130,8 @@ export default async function MaintenancePage({
     : MOCK_MAINTENANCE_LOGS;
 
   const totalLogsCount = allOrgLogs.length;
-  const activeInShopCount = allOrgLogs.filter((l) => l.closedAt === null).length;
-  const totalCostAmount = allOrgLogs.reduce((acc, log) => {
+  const activeInShopCount = allOrgLogs.filter((l: any) => l.closedAt === null).length;
+  const totalCostAmount = allOrgLogs.reduce((acc: any, log: any) => {
     if (log.cost) {
       const val = typeof log.cost === "object" ? Number(log.cost.toString()) : Number(log.cost);
       return acc + (isNaN(val) ? 0 : val);
@@ -320,6 +320,7 @@ export default async function MaintenancePage({
                     <th className="px-6 py-4">Service Dates</th>
                     <th className="px-6 py-4">Status</th>
                     <th className="px-6 py-4 text-right">Cost</th>
+                    <th className="px-6 py-4 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -362,6 +363,18 @@ export default async function MaintenancePage({
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right font-semibold text-slate-900">
                           {formatCurrency(log.cost)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                          {!isClosed ? (
+                            <Link
+                              href={`/maintenance/${log.id}/resolve`}
+                              className="inline-flex items-center justify-center h-8 px-3 rounded-lg border border-slate-200 bg-white text-slate-700 font-medium text-xs hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm cursor-pointer"
+                            >
+                              Resolve
+                            </Link>
+                          ) : (
+                            <span className="text-xs text-slate-400 font-medium">—</span>
+                          )}
                         </td>
                       </tr>
                     );

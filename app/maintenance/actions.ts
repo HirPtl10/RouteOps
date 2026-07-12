@@ -41,7 +41,7 @@ export async function createMaintenanceLog(prevState: any, formData: FormData) {
   let success = false;
 
   // Verify DB configuration
-  if (!process.env.DATABASE_URL) {
+  if (!process.env.DATABASE_URL || !prisma) {
     console.warn("No DATABASE_URL set. Simulating maintenance log creation in-memory.");
     
     const mockVehicle = MOCK_VEHICLES.find((v) => v.id === data.vehicleId);
@@ -56,7 +56,7 @@ export async function createMaintenanceLog(prevState: any, formData: FormData) {
         openedAt: new Date(data.openedAt),
         closedAt: null,
         description: data.description,
-        cost: data.cost,
+        cost: data.cost ?? null,
         notes: data.notes || null,
         vehicle: mockVehicle,
       });
@@ -95,7 +95,7 @@ export async function createMaintenanceLog(prevState: any, formData: FormData) {
       }
 
       // Run Transaction: Create log + set vehicle status to IN_SHOP
-      await prisma.$transaction(async (tx) => {
+      await prisma.$transaction(async (tx: any) => {
         const vehicle = await tx.vehicle.findFirst({
           where: { id: data.vehicleId, organizationId },
         });
@@ -139,3 +139,102 @@ export async function createMaintenanceLog(prevState: any, formData: FormData) {
     redirect("/maintenance");
   }
 }
+
+const resolveSchema = z.object({
+  logId: z.string().min(1, "Log ID is required"),
+  closedAt: z.string().min(1, "Completion date is required"),
+  cost: z.number().nullable().optional(),
+  notes: z.string().optional(),
+});
+
+export async function resolveMaintenanceLog(prevState: any, formData: FormData) {
+  const rawLogId = formData.get("logId") as string;
+  const rawClosedAt = formData.get("closedAt") as string;
+  const rawCost = formData.get("cost") as string;
+  const rawNotes = formData.get("notes") as string;
+
+  const validated = resolveSchema.safeParse({
+    logId: rawLogId,
+    closedAt: rawClosedAt,
+    cost: rawCost === "" ? null : Number(rawCost),
+    notes: rawNotes,
+  });
+
+  if (!validated.success) {
+    return {
+      success: false,
+      errors: validated.error.flatten().fieldErrors,
+    };
+  }
+
+  const data = validated.data;
+  let success = false;
+
+  // Verify DB configuration
+  if (!process.env.DATABASE_URL || !prisma) {
+    console.warn("No DATABASE_URL set. Simulating maintenance log resolution in-memory.");
+    
+    const mockLog = MOCK_MAINTENANCE_LOGS.find((l) => l.id === data.logId);
+    if (mockLog) {
+      // 1. Update mock log fields
+      mockLog.closedAt = new Date(data.closedAt);
+      mockLog.cost = data.cost ?? null;
+      mockLog.notes = data.notes || null;
+
+      // 2. Set vehicle status to AVAILABLE
+      const mockVehicle = MOCK_VEHICLES.find((v) => v.id === mockLog.vehicleId);
+      if (mockVehicle) {
+        mockVehicle.status = "AVAILABLE";
+      }
+      success = true;
+    } else {
+      return {
+        success: false,
+        error: "Selected maintenance log not found in mock cache.",
+      };
+    }
+  } else {
+    try {
+      // Run Transaction: Update log + set vehicle status to AVAILABLE
+      await prisma.$transaction(async (tx: any) => {
+        const log = await tx.maintenanceLog.findUnique({
+          where: { id: data.logId },
+        });
+
+        if (!log) {
+          throw new Error("Maintenance log not found.");
+        }
+
+        // Update log
+        await tx.maintenanceLog.update({
+          where: { id: data.logId },
+          data: {
+            closedAt: new Date(data.closedAt),
+            cost: data.cost,
+            notes: data.notes || null,
+          },
+        });
+
+        // Set vehicle AVAILABLE
+        await tx.vehicle.update({
+          where: { id: log.vehicleId },
+          data: { status: "AVAILABLE" },
+        });
+      });
+
+      success = true;
+    } catch (error: any) {
+      console.error("Failed to resolve maintenance log:", error);
+      return {
+        success: false,
+        error: error.message || "An unexpected error occurred during resolution.",
+      };
+    }
+  }
+
+  if (success) {
+    revalidatePath("/maintenance");
+    redirect("/maintenance");
+  }
+}
+

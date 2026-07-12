@@ -91,7 +91,7 @@ export const MOCK_MAINTENANCE_LOGS: MockMaintenanceLog[] = [
  * Returns true if DB is connected and ready, false if we should fall back to mock data.
  */
 export async function ensureSeedData(): Promise<boolean> {
-  if (!process.env.DATABASE_URL) {
+  if (!process.env.DATABASE_URL || !prisma) {
     console.warn("DATABASE_URL not set. Falling back to mock data.");
     return false;
   }
@@ -107,7 +107,7 @@ export async function ensureSeedData(): Promise<boolean> {
     console.log("Database empty. Auto-seeding initial Logistics organization...");
     
     // Seed using a transaction
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       // 1. Create Organization
       const org = await tx.organization.create({
         data: {
