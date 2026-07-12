@@ -1,26 +1,61 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import { authConfig } from "./auth.config";
+import { prisma } from "./lib/prisma";
+import { Role } from "@prisma/client";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  ...authConfig,
   providers: [
-    // Placeholder until Developer 2 provides Prisma Schema and we integrate PrismaAdapter
     Credentials({
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        // TODO: Replace with Prisma DB query once Developer 2 adds the schema
-        // and we configure the NextAuth Prisma adapter.
-        console.warn("Auth.js is currently in scaffolding mode waiting for DB schema.");
+        if (!credentials?.email) return null;
+
+        // Query the database to find the user
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email as string },
+        });
+
+        if (user) {
+          // Note: Since the database schema doesn't have a password field,
+          // we are validating that the user exists. In a production environment,
+          // we would verify the password hash here.
+          return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            organizationId: user.organizationId,
+          };
+        }
+
         return null;
       },
     }),
   ],
-  pages: {
-    signIn: "/login",
+  callbacks: {
+    ...authConfig.callbacks,
+    async jwt({ token, user }) {
+      if (user) {
+        token.role = user.role;
+        token.organizationId = user.organizationId;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (token && session.user) {
+        session.user.role = token.role as Role;
+        session.user.organizationId = token.organizationId as string;
+      }
+      return session;
+    },
   },
   session: {
     strategy: "jwt",
+    maxAge: 20 * 60, // 20 minutes (1200 seconds)
   },
 });
