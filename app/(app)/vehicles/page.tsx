@@ -46,7 +46,13 @@ export default function VehiclesPage() {
         const res = await fetch("/api/vehicles");
         if (res.ok) {
           const data = await res.json();
-          if (data && data.length > 0) {
+          if (data?.source === "database" && Array.isArray(data.vehicles)) {
+            setVehicles(data.vehicles);
+            setIsDbFallback(false);
+          } else if (data?.source === "mock" && Array.isArray(data.vehicles)) {
+            setVehicles(data.vehicles);
+            setIsDbFallback(true);
+          } else if (Array.isArray(data) && data.length > 0) {
             setVehicles(data);
             setIsDbFallback(false);
           }
@@ -124,9 +130,9 @@ export default function VehiclesPage() {
         <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-2xl text-xs text-amber-800">
           <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="font-semibold">Bypassing Live Database Connection</p>
+            <p className="font-semibold">Preview fleet data</p>
             <p className="mt-0.5 text-amber-700 leading-relaxed">
-              RouteOps is currently operating in sandbox simulation mode. Static fleet records are shown because the database is not configured. When Developer 2 finishes DB setup, live connection will sync automatically.
+              Preview fleet records are shown until you sign in. Once authenticated, this list loads from your organization’s database.
             </p>
           </div>
         </div>

@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { authConfig } from "./auth.config";
 import { prisma } from "./lib/prisma";
+import { verifyPassword } from "./lib/password";
 import { Role } from "@prisma/client";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -13,17 +14,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email) return null;
+        if (!credentials?.email || !credentials?.password) return null;
+
+        const email = String(credentials.email).toLowerCase().trim();
 
         // Query the database to find the user
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email as string },
+          where: { email },
         });
 
-        if (user) {
-          // Note: Since the database schema doesn't have a password field,
-          // we are validating that the user exists. In a production environment,
-          // we would verify the password hash here.
+        if (user?.passwordHash) {
+          const isValidPassword = await verifyPassword(credentials.password as string, user.passwordHash);
+
+          if (!isValidPassword) {
+            return null;
+          }
+
           return {
             id: user.id,
             name: user.name,
@@ -41,6 +47,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     ...authConfig.callbacks,
     async jwt({ token, user }) {
       if (user) {
+        token.name = user.name;
+        token.email = user.email;
         token.role = user.role;
         token.organizationId = user.organizationId;
       }
@@ -48,6 +56,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     async session({ session, token }) {
       if (token && session.user) {
+        if (typeof token.name === "string") {
+          session.user.name = token.name;
+        }
+        if (typeof token.email === "string") {
+          session.user.email = token.email;
+        }
         session.user.role = token.role as Role;
         session.user.organizationId = token.organizationId as string;
       }

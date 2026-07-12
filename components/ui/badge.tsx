@@ -5,7 +5,7 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: "default" | "secondary" | "success" | "warning" | "destructive" | "outline";
 }
 
-export function Badge({ className, variant = "default", ...props }: BadgeProps) {
+export function Badge({ className, variant = "default", style, ...props }: BadgeProps) {
   const baseStyles =
     "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2";
 
@@ -18,5 +18,21 @@ export function Badge({ className, variant = "default", ...props }: BadgeProps) 
     outline: "text-slate-950 border border-slate-200",
   };
 
-  return <div className={cn(baseStyles, variants[variant], className)} {...props} />;
+  return (
+    <div
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "0.375rem",
+        borderRadius: "9999px",
+        padding: "0.25rem 0.75rem",
+        fontSize: "0.75rem",
+        fontWeight: 600,
+        border: variant === "outline" ? "1px solid #e2e8f0" : undefined,
+        ...style,
+      }}
+      className={cn(baseStyles, variants[variant], className)}
+      {...props}
+    />
+  );
 }

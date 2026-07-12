@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "RouteOps – Fleet Management",
-  description: "Simple and powerful fleet management for drivers and managers.",
+  title: "TransitOps",
+  description: "A clean fleet operations preview for the hackathon build.",
 };
 
 export default function RootLayout({
@@ -13,16 +13,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
-          rel="stylesheet"
-        />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-      </head>
-      <body style={{ fontFamily: "'Inter', Arial, Helvetica, sans-serif" }}>
+      <body
+        style={{
+          margin: 0,
+          minHeight: "100vh",
+          background:
+            "radial-gradient(circle at top, rgba(56, 189, 248, 0.08), transparent 28%), linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%)",
+          color: "#0f172a",
+          fontFamily:
+            'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+        }}
+      >
         {children}
       </body>
     </html>

@@ -8,7 +8,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = "primary", size = "md", isLoading, children, disabled, ...props }, ref) => {
+  ({ className, variant = "primary", size = "md", isLoading, children, disabled, style, ...props }, ref) => {
     const baseStyles =
       "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 disabled:pointer-events-none disabled:opacity-50 cursor-pointer text-sm";
 
@@ -28,10 +28,39 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       icon: "h-9 w-9",
     };
 
+    const variantStyles = {
+      primary: { backgroundColor: "#0f172a", color: "#ffffff", boxShadow: "0 1px 3px rgba(15,23,42,0.12)" },
+      secondary: { backgroundColor: "#f1f5f9", color: "#0f172a" },
+      outline: { backgroundColor: "#ffffff", color: "#0f172a", border: "1px solid #e2e8f0" },
+      destructive: { backgroundColor: "#e11d48", color: "#ffffff", boxShadow: "0 1px 3px rgba(225,29,72,0.12)" },
+      ghost: { backgroundColor: "transparent", color: "#334155" },
+      link: { backgroundColor: "transparent", color: "#0284c7", textDecoration: "underline", padding: 0, height: "auto" },
+    } as const;
+
+    const sizeStyles = {
+      sm: { minHeight: "2.25rem", padding: "0 0.75rem", fontSize: "0.75rem" },
+      md: { minHeight: "2.5rem", padding: "0 1rem", fontSize: "0.875rem" },
+      lg: { minHeight: "2.75rem", padding: "0 1.5rem", fontSize: "1rem" },
+      icon: { width: "2.25rem", height: "2.25rem", padding: 0 },
+    } as const;
+
     return (
       <button
         ref={ref}
         disabled={disabled || isLoading}
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "0.5rem",
+          borderRadius: "0.875rem",
+          fontWeight: 500,
+          transition: "all 150ms ease",
+          cursor: "pointer",
+          ...(variantStyles[variant] as React.CSSProperties),
+          ...(sizeStyles[size] as React.CSSProperties),
+          ...style,
+        }}
         className={cn(baseStyles, variants[variant], sizes[size], className)}
         {...props}
       >

@@ -103,7 +103,8 @@ export default function VehicleDetailPage() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to update vehicle profile.");
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData?.error || "Failed to update vehicle profile.");
       }
 
       const updated = await response.json();

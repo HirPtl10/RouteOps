@@ -1,9 +1,10 @@
-import NextAuth from "next-auth";
-import { authConfig } from "./auth.config";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
-export default NextAuth(authConfig).auth;
+export default function middleware(_request: NextRequest) {
+  return NextResponse.next();
+}
 
 export const config = {
-  // Protect all routes except auth API endpoints, static assets, etc.
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|truck.svg).*)"],
+  matcher: ["/:path*"],
 };

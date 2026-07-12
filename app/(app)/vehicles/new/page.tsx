@@ -77,7 +77,8 @@ export default function NewVehiclePage() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to register vehicle. Please try again.");
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData?.error || "Failed to register vehicle. Please try again.");
       }
 
       router.push("/vehicles");

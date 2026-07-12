@@ -1,30 +1,22 @@
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 
 const globalForPrisma = globalThis as unknown as {
-  prisma?: PrismaClient | null;
+  prisma?: PrismaClient;
 };
 
-// Only initialise a real PrismaClient when a proper DATABASE_URL is available.
-// Developer 2 owns the DB setup; until then, API routes fall back to mock data.
-const isDbAvailable =
-  typeof process.env.DATABASE_URL === "string" &&
-  process.env.DATABASE_URL.startsWith("postgres");
+const connectionString = process.env.DATABASE_URL;
 
-function createPrismaClient(): PrismaClient | null {
-  if (!isDbAvailable) return null;
-  try {
-    return new PrismaClient({
-      log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
-    });
-  } catch {
-    return null;
-  }
+if (!connectionString) {
+  throw new Error("DATABASE_URL is required to initialize Prisma.");
 }
 
-export const prisma: PrismaClient | null =
-  globalForPrisma.prisma !== undefined
-    ? globalForPrisma.prisma
-    : createPrismaClient();
+export const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    adapter: new PrismaPg({ connectionString }),
+    log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
+  });
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;

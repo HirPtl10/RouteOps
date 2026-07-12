@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
 const mockVehicles = [
@@ -9,69 +11,65 @@ const mockVehicles = [
   { id: "v5", code: "V-1005", vin: "1FA6P8CF4GHK8210", plateNumber: "DL-01-JK-7890", make: "Eicher", model: "Pro 6048", year: 2019, capacityKg: 24000, status: "RETIRED" },
 ];
 
+const vehicleSchema = z.object({
+  code: z.string().min(3).max(12),
+  vin: z.string().max(17).optional().or(z.literal("")),
+  plateNumber: z.string().min(4).max(15),
+  make: z.string().min(2),
+  model: z.string().min(2),
+  year: z.coerce.number().int().min(1950).max(new Date().getFullYear() + 1),
+  capacityKg: z.coerce.number().int().min(100),
+  status: z.enum(["AVAILABLE", "ON_TRIP", "IN_SHOP", "RETIRED"]).default("AVAILABLE"),
+});
+
 export async function GET() {
-  // If database is not yet configured, return mock data immediately
-  if (!prisma) {
-    return NextResponse.json(mockVehicles);
+  const session = await auth();
+  const organizationId = session?.user?.organizationId;
+
+  if (!organizationId) {
+    return NextResponse.json({ source: "mock", vehicles: mockVehicles });
   }
-  try {
-    const vehicles = await prisma.vehicle.findMany({
-      orderBy: { code: "asc" },
-    });
-    return NextResponse.json(vehicles);
-  } catch (error) {
-    console.warn("Database connection failed, bypassing active query:", error);
-    return NextResponse.json(mockVehicles);
-  }
+
+  const vehicles = await prisma.vehicle.findMany({
+    where: { organizationId },
+    orderBy: { code: "asc" },
+  });
+
+  return NextResponse.json({ source: "database", vehicles });
 }
 
 export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const { code, vin, plateNumber, make, model, year, capacityKg, status } = body;
-    const organizationId = "demo-org-123";
+  const session = await auth();
+  const organizationId = session?.user?.organizationId;
 
-    if (prisma) {
-      try {
-        const newVehicle = await prisma.vehicle.create({
-          data: {
-            organizationId,
-            code,
-            vin: vin || null,
-            plateNumber,
-            make,
-            model,
-            year: parseInt(year),
-            capacityKg: parseInt(capacityKg),
-            status: status || "AVAILABLE",
-          },
-        });
-        return NextResponse.json(newVehicle, { status: 201 });
-      } catch (dbError) {
-        console.warn("Prisma write failed. Running in simulation mode:", dbError);
-      }
+  if (!organizationId) {
+    return NextResponse.json({ error: "Please sign in to add vehicles." }, { status: 401 });
+  }
+
+  try {
+    const payload = await request.json();
+    const parsed = vehicleSchema.safeParse(payload);
+
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Please check the vehicle form and try again." }, { status: 400 });
     }
 
-    // Simulation response (DB not configured or write failed)
-    const simulatedVehicle = {
-      id: `sim-${Math.random().toString(36).substr(2, 9)}`,
-      organizationId,
-      code,
-      vin: vin || null,
-      plateNumber,
-      make,
-      model,
-      year: parseInt(year),
-      capacityKg: parseInt(capacityKg),
-      status: status || "AVAILABLE",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    const vehicle = await prisma.vehicle.create({
+      data: {
+        organizationId,
+        code: parsed.data.code.trim(),
+        vin: parsed.data.vin?.trim() || null,
+        plateNumber: parsed.data.plateNumber.trim(),
+        make: parsed.data.make.trim(),
+        model: parsed.data.model.trim(),
+        year: parsed.data.year,
+        capacityKg: parsed.data.capacityKg,
+        status: parsed.data.status,
+      },
+    });
 
-    return NextResponse.json(simulatedVehicle, { status: 201 });
-  } catch (err) {
-    console.error("Invalid vehicle creation payload:", err);
-    return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+    return NextResponse.json(vehicle, { status: 201 });
+  } catch (error) {
+    return NextResponse.json({ error: "Unable to save vehicle right now." }, { status: 500 });
   }
 }
-
