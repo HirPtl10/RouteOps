@@ -12,8 +12,6 @@ Built during an **8-hour hackathon**, RouteOps replaces fragmented spreadsheets 
 
 > Add your main dashboard screenshot here.
 
-![RouteOps Dashboard](./public/screenshots/dashboard.png)
-
 <br />
 
 > Add screenshots of your core operational workflows here.
