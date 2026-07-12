@@ -55,29 +55,23 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             </div>
             <div>
               <p style={{ margin: 0, fontSize: "0.95rem", fontWeight: 700, color: "#0f172a" }}>TransitOps</p>
-              <p style={{ margin: 0, fontSize: "0.8rem", color: "#64748b" }}>Static fleet preview</p>
+              <p style={{ margin: 0, fontSize: "0.8rem", color: "#64748b" }}>Fleet management</p>
             </div>
           </Link>
 
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap", justifyContent: "flex-end" }}>
-            <Badge variant="outline">Dashboard preview</Badge>
-            <Badge variant={session ? "secondary" : "outline"}>{userLabel}</Badge>
+            <Badge variant={session ? "success" : "outline"}>
+              {session ? "Online" : "Guest"}
+            </Badge>
+            <Badge variant="secondary">{userLabel}</Badge>
             <span style={{ fontSize: "0.8rem", color: "#64748b" }}>{userMeta}</span>
           </div>
         </div>
       </header>
 
-      <div
-        style={{
-          margin: "0 auto",
-          maxWidth: "72rem",
-          display: "grid",
-          gridTemplateColumns: "220px minmax(0, 1fr)",
-          gap: "1.5rem",
-          padding: "1.5rem 1rem",
-        }}
-      >
+      <div className="app-shell">
         <aside
+          className="app-sidebar"
           style={{
             border: "1px solid #e2e8f0",
             borderRadius: "1.5rem",
@@ -85,12 +79,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             padding: "1rem",
             boxShadow: "0 10px 30px rgba(15, 23, 42, 0.06)",
             height: "fit-content",
+            position: "sticky",
+            top: "5rem",
           }}
         >
           <p style={{ margin: "0 0 0.75rem", fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.2em", color: "#64748b", textTransform: "uppercase" }}>
-            Preview areas
+            Navigation
           </p>
-          <nav style={{ display: "grid", gap: "0.5rem" }}>
+          <nav style={{ display: "grid", gap: "0.375rem" }}>
             {navItems.map((item) => (
               <Link
                 key={item.href}
@@ -103,6 +99,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                   borderRadius: "0.875rem",
                   color: "#334155",
                   textDecoration: "none",
+                  fontSize: "0.9rem",
+                  fontWeight: 500,
+                  transition: "background 0.15s ease",
                 }}
               >
                 {item.label}
