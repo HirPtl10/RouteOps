@@ -10,6 +10,7 @@ const navItems = [
   { label: "Trips", href: "/trips" },
   { label: "Vehicles", href: "/vehicles" },
   { label: "Maintenance", href: "/maintenance" },
+  { label: "Alerts", href: "/alerts" },
 ];
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
