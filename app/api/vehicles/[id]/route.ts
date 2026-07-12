@@ -91,3 +91,50 @@ export async function PUT(
     return NextResponse.json({ error: "Unable to update vehicle right now." }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const session = await auth();
+  const organizationId = session?.user?.organizationId;
+
+  if (!organizationId) {
+    return NextResponse.json({ error: "Please sign in to delete vehicles." }, { status: 401 });
+  }
+
+  try {
+    const vehicle = await prisma.vehicle.findFirst({
+      where: { id, organizationId },
+    });
+
+    if (!vehicle) {
+      return NextResponse.json({ error: "Vehicle not found" }, { status: 404 });
+    }
+
+    const [tripCount, assignedDriverCount] = await Promise.all([
+      prisma.trip.count({
+        where: { organizationId, vehicleId: id },
+      }),
+      prisma.driver.count({
+        where: { organizationId, assignedVehicleId: id },
+      }),
+    ]);
+
+    if (tripCount > 0 || assignedDriverCount > 0) {
+      return NextResponse.json(
+        { error: "This vehicle is linked to trip or driver history and cannot be deleted." },
+        { status: 409 },
+      );
+    }
+
+    await prisma.vehicle.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return NextResponse.json({ error: "Unable to delete vehicle right now." }, { status: 500 });
+  }
+}

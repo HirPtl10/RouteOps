@@ -7,6 +7,9 @@ import { revalidatePath } from "next/cache";
 
 export async function createTripAction(formData: {
   tripNumber: string;
+  origin: string;
+  destination: string;
+  scheduledAt: string;
   vehicleId?: string | null;
   driverId?: string | null;
   cargoWeightKg?: number | null;
@@ -27,6 +30,9 @@ export async function createTripAction(formData: {
     await createTrip({
       organizationId,
       tripNumber: formData.tripNumber,
+      origin: formData.origin,
+      destination: formData.destination,
+      scheduledAt: new Date(formData.scheduledAt),
       vehicleId: formData.vehicleId,
       driverId: formData.driverId,
       cargoWeightKg: formData.cargoWeightKg,

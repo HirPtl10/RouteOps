@@ -82,6 +82,7 @@ model Vehicle {
 
   organization    Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   trips           Trip[]
+  assignedDrivers Driver[]
   maintenanceLogs MaintenanceLog[]
   fuelLogs        FuelLog[]
   expenses        Expense[]
@@ -93,6 +94,7 @@ model Vehicle {
 model Driver {
   id                String       @id @default(cuid())
   organizationId    String
+  assignedVehicleId  String?
   firstName         String
   lastName          String
   licenseNumber     String
@@ -103,10 +105,12 @@ model Driver {
   updatedAt         DateTime     @updatedAt
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  assignedVehicle Vehicle?      @relation(fields: [assignedVehicleId], references: [id], onDelete: SetNull)
   trips        Trip[]
 
   @@unique([organizationId, licenseNumber])
   @@index([organizationId, status])
+  @@index([assignedVehicleId])
 }
 
 model Trip {
@@ -115,6 +119,11 @@ model Trip {
   vehicleId      String?
   driverId       String?
   tripNumber     String
+  origin         String
+  destination    String
+  scheduledAt    DateTime
+  startedAt      DateTime?
+  completedAt    DateTime?
   status         TripStatus  @default(DRAFT)
   cargoWeightKg  Int?
   notes          String?
@@ -129,6 +138,7 @@ model Trip {
 
   @@unique([organizationId, tripNumber])
   @@index([organizationId, status])
+  @@index([organizationId, scheduledAt])
   @@index([vehicleId])
   @@index([driverId])
 }

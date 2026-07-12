@@ -120,6 +120,34 @@ export default function VehicleDetailPage() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!confirm("Delete this vehicle? Vehicles with trip history or active driver assignments cannot be removed.")) {
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      setError("");
+
+      const response = await fetch(`/api/vehicles/${id}`, {
+        method: "DELETE",
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data?.error || "Failed to delete vehicle.");
+      }
+
+      router.push("/vehicles");
+      router.refresh();
+    } catch (err: any) {
+      setError(err.message || "An unexpected error occurred during delete.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "AVAILABLE":
@@ -187,13 +215,24 @@ export default function VehicleDetailPage() {
           </div>
 
           {!editMode && (
-            <Button 
-              onClick={() => setEditMode(true)}
-              className="gap-1.5 rounded-xl border-slate-200 hover:bg-slate-50 cursor-pointer h-9 px-3 text-xs bg-slate-900 text-white hover:bg-slate-800 font-medium"
-            >
-              <Edit3 className="h-3.5 w-3.5" />
-              Edit Details
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => setEditMode(true)}
+                className="gap-1.5 rounded-xl border-slate-200 hover:bg-slate-50 cursor-pointer h-9 px-3 text-xs bg-slate-900 text-white hover:bg-slate-800 font-medium"
+              >
+                <Edit3 className="h-3.5 w-3.5" />
+                Edit Details
+              </Button>
+              <Button 
+                variant="destructive"
+                onClick={handleDelete}
+                className="gap-1.5 rounded-xl cursor-pointer h-9 px-3 text-xs font-medium"
+                disabled={submitting}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Delete
+              </Button>
+            </div>
           )}
         </div>
 

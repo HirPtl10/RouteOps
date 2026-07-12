@@ -6,6 +6,8 @@ import { SessionActions } from "@/components/session-actions";
 const navItems = [
   { label: "Home", href: "/" },
   { label: "Dashboard", href: "/dashboard" },
+  { label: "Drivers", href: "/drivers" },
+  { label: "Trips", href: "/trips" },
   { label: "Vehicles", href: "/vehicles" },
   { label: "Maintenance", href: "/maintenance" },
 ];

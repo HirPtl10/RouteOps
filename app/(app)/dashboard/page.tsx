@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getDriverStats, listDriverActivityForOrganization } from "@/lib/drivers";
+import { getTripStats, listTripActivityForOrganization } from "@/lib/trips";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Activity, Fuel, MapPin, Wrench, Users } from "lucide-react";
+import { Activity, Fuel, MapPin, Route, Truck, UserCheck, Users, Wrench } from "lucide-react";
 
 const linkButtonStyle = {
   display: "inline-flex",
@@ -68,24 +70,17 @@ export default async function DashboardPage() {
   const [
     totalVehicles,
     availableVehicles,
-    readyDrivers,
-    activeTrips,
     openMaintenance,
-    recentTrips,
     recentMaintenance,
     recentFuelLogs,
+    driverStats,
+    tripStats,
+    driverActivity,
+    tripActivity,
   ] = await Promise.all([
     prisma.vehicle.count({ where: { organizationId } }),
     prisma.vehicle.count({ where: { organizationId, status: "AVAILABLE" } }),
-    prisma.driver.count({ where: { organizationId, status: "AVAILABLE" } }),
-    prisma.trip.count({ where: { organizationId, status: { in: ["DRAFT", "DISPATCHED"] } } }),
     prisma.maintenanceLog.count({ where: { organizationId, closedAt: null } }),
-    prisma.trip.findMany({
-      where: { organizationId },
-      orderBy: { updatedAt: "desc" },
-      take: 2,
-      include: { vehicle: true, driver: true },
-    }),
     prisma.maintenanceLog.findMany({
       where: { organizationId },
       orderBy: { updatedAt: "desc" },
@@ -98,20 +93,26 @@ export default async function DashboardPage() {
       take: 1,
       include: { vehicle: true, trip: true },
     }),
+    getDriverStats(organizationId),
+    getTripStats(organizationId),
+    listDriverActivityForOrganization(organizationId),
+    listTripActivityForOrganization(organizationId),
   ]);
 
   const metrics = [
-    { label: "Fleet vehicles", value: totalVehicles.toString(), icon: MapPin },
+    { label: "Fleet vehicles", value: totalVehicles.toString(), icon: Truck },
     { label: "Available vehicles", value: availableVehicles.toString(), icon: Activity },
-    { label: "Drivers ready", value: readyDrivers.toString(), icon: Users },
+    { label: "Available drivers", value: driverStats.available.toString(), icon: UserCheck },
+    { label: "Scheduled trips", value: tripStats.scheduled.toString(), icon: Route },
+    { label: "Trips in progress", value: tripStats.inProgress.toString(), icon: Users },
     { label: "Open maintenance", value: openMaintenance.toString(), icon: Wrench },
   ];
 
   const activity = [
-    recentTrips[0]
+    tripActivity[0]
       ? {
-          title: `Trip ${recentTrips[0].tripNumber}`,
-          meta: `${recentTrips[0].status} · ${recentTrips[0].vehicle?.code ?? "No vehicle"}${recentTrips[0].driver ? ` · ${recentTrips[0].driver.firstName} ${recentTrips[0].driver.lastName}` : ""}`,
+          title: `Trip ${tripActivity[0].tripNumber}`,
+          meta: `${tripActivity[0].status} · ${tripActivity[0].vehicle?.code ?? "No vehicle"}${tripActivity[0].driver ? ` · ${tripActivity[0].driver.firstName} ${tripActivity[0].driver.lastName}` : ""}`,
         }
       : {
           title: "No trips yet",
@@ -125,6 +126,15 @@ export default async function DashboardPage() {
       : {
           title: "No maintenance logs yet",
           meta: "Open maintenance records will appear here automatically.",
+        },
+    driverActivity[0]
+      ? {
+          title: `Driver ${driverActivity[0].firstName} ${driverActivity[0].lastName}`,
+          meta: `${driverActivity[0].status}${driverActivity[0].assignedVehicle ? ` · ${driverActivity[0].assignedVehicle.code}` : ""}`,
+        }
+      : {
+          title: "No driver updates yet",
+          meta: "New driver changes appear here automatically.",
         },
     recentFuelLogs[0]
       ? {
@@ -156,7 +166,7 @@ export default async function DashboardPage() {
             Signed in
           </Badge>
           <Badge variant="outline" style={{ width: "fit-content" }}>
-            Active trips {activeTrips}
+            Active trips {tripStats.inProgress}
           </Badge>
           <span style={{ fontSize: "0.9rem", color: "#475569" }}>
             {userName} · {session.user.role ?? "Member"}
@@ -167,7 +177,7 @@ export default async function DashboardPage() {
         </div>
       </section>
 
-      <section style={{ display: "grid", gap: "1rem", gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
+      <section style={{ display: "grid", gap: "1rem", gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}>
         {metrics.map((metric) => {
           const Icon = metric.icon;
           return (
@@ -212,6 +222,12 @@ export default async function DashboardPage() {
             <CardDescription>Fast links to the areas that now share the same authenticated shell.</CardDescription>
           </CardHeader>
           <CardContent style={{ display: "grid", gap: "0.75rem" }}>
+            <Link href="/drivers" style={{ ...linkButtonStyle, background: "#fff", color: "#0f172a" }}>
+              Open drivers
+            </Link>
+            <Link href="/trips" style={{ ...linkButtonStyle, background: "#fff", color: "#0f172a" }}>
+              Open trips
+            </Link>
             <Link href="/vehicles" style={{ ...linkButtonStyle, background: "#0f172a", color: "#fff", boxShadow: "0 1px 3px rgba(15,23,42,0.12)" }}>
               Open vehicles
             </Link>

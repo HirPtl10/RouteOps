@@ -71,6 +71,8 @@ export default function Home() {
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem" }}>
             {actionLink("/dashboard", "primary", "View dashboard", <ArrowRight className="h-4 w-4" />)}
+            {actionLink("/drivers", "secondary", "Browse drivers")}
+            {actionLink("/trips", "secondary", "Browse trips")}
             {actionLink("/vehicles", "secondary", "Browse vehicles")}
             {actionLink("/maintenance", "secondary", "Open maintenance")}
           </div>
